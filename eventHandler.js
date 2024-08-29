@@ -516,7 +516,7 @@ async function renderCards(facilities) {
 async function onWebLoad() {
   // Show loading spinner
   showLoadingSpinner();
-  let facilitiesString = localStorage.getItem("savedFacilities") || [];
+  let facilitiesString = localStorage.getItem("savedFacilities");
   facilities = facilitiesString ? JSON.parse(facilitiesString) : [];
 
   // Render Cards

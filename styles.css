@@ -266,6 +266,7 @@ nav .left p {
   justify-content: center;
   box-shadow: none;
   border: none;
+  min-height: 60vh;
 }
 
 .add-button {
