@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>SmartLock Manager</title>
+  </head>
+
+  <body>
+    <!-- Navigation -->
+    <nav>
+      <div class="left">
+        <a id="refreshIcon" onclick="refreshTable()">↻</a>
+        <p id="loadDateTime">Date Loading...</p>
+      </div>
+
+      <h1>SmartLock Dashboard</h1>
+
+      <div class="right">
+        <label class="darkModeCheckbox">Dark Mode</label>
+        <label class="switch">
+          <input type="checkbox" id="darkModeToggle" />
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </nav>
+
+    <!-- Card -->
+    <div id="card-container" class="card-container"></div>
+
+    <!-- Loading Spinner .hidden on load -->
+    <div id="loading-spinner" class="hidden">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- Error Notification -->
+    <p id="errText">Error Loading...</p>
+
+    <!-- JavaScript Includes -->
+    <script src="eventHandler.js"></script>
+  </body>
+</html>
