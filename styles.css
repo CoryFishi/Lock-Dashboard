@@ -433,7 +433,7 @@ th,
 td {
   border: 1px solid #ddd;
   padding: 8px;
-  text-align: left;
+  text-align: center;
 }
 th {
   background-color: #f2f2f2;
@@ -444,4 +444,17 @@ tr:nth-child(even) {
 }
 tr:hover {
   background: #d0d7d9;
+}
+
+#error,
+#warning,
+#okay,
+#name,
+#smartlocks {
+  cursor: pointer;
+}
+
+a {
+  color: black;
+  text-decoration: none;
 }

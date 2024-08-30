@@ -379,6 +379,121 @@ function hideLoadingSpinner() {
   spinner.classList.add("hidden");
 }
 
+async function smartlockExpandedPopUp(smartLocksExpanded, value) {
+  // Create popup container
+  const popupContainer = document.createElement("div");
+  popupContainer.classList.add("expanded-popup-container");
+
+  const expandedSmartLockList = document.createElement("table");
+  expandedSmartLockList.className = "smart-lock-table";
+  const headers = [
+    "Name",
+    "Unit",
+    "Device Type",
+    "Signal Quality",
+    "Battery",
+    "Lock State",
+    "Tenant",
+    "Lock Status",
+    "Status Message",
+    "Last Update",
+  ];
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  headers.forEach((headerText) => {
+    const th = document.createElement("th");
+    th.textContent = headerText;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+
+  const tbody = document.createElement("tbody");
+
+  // Loop through each device in smartLocksExpanded
+  smartLocksExpanded.forEach((device) => {
+    const row = document.createElement("tr");
+    if (device.overallStatus !== value && value !== "") {
+      return;
+    }
+
+    // Create a cell for each header and populate it with the corresponding data
+    headers.forEach((header) => {
+      const td = document.createElement("td");
+      switch (header) {
+        case "Name":
+          td.textContent = device.name;
+          break;
+        case "Unit":
+          td.textContent = device.unitName;
+          break;
+        case "Device Type":
+          td.textContent = device.deviceType;
+          break;
+        case "Signal Quality":
+          const signal = (device.signalQuality / 255) * 100;
+          td.textContent = signal.toFixed(2) + "%";
+          break;
+        case "Battery":
+          var batteryIcon;
+          if (device.batteryLevel > 50) {
+            batteryIcon = "🔋";
+          } else {
+            batteryIcon = "🪫";
+          }
+          td.textContent = batteryIcon + device.batteryLevel + "%";
+          break;
+        case "Lock State":
+          td.textContent = device.lockState;
+          break;
+        case "Tenant":
+          td.textContent = device.visitorName;
+          break;
+        case "Lock Status":
+          if (device.overallStatus === "ok") {
+            td.textContent = "✅";
+          } else if (device.overallStatus === "error") {
+            td.textContent = "⛔";
+          } else {
+            td.textContent = "⚠️";
+          }
+          break;
+        case "Status Message":
+          td.textContent = device.statusMessages.join(", ");
+          break;
+        case "Last Update":
+          td.textContent = device.lastUpdateTimestampDisplay;
+          break;
+        default:
+          td.textContent = "";
+          break;
+      }
+      row.appendChild(td);
+    });
+
+    // Append the row to the tbody
+    tbody.appendChild(row);
+  });
+
+  expandedSmartLockList.appendChild(tbody);
+  expandedSmartLockList.appendChild(thead);
+  popupContainer.appendChild(expandedSmartLockList);
+
+  // Create close button
+  const closeButton = document.createElement("button");
+  closeButton.textContent = "X";
+  closeButton.classList.add("close-button");
+  closeButton.addEventListener("click", function () {
+    expanedOpened = false;
+    document.body.removeChild(popupContainer);
+    document.body.style.overflow = "";
+    enableButtons();
+  });
+
+  popupContainer.appendChild(closeButton);
+
+  document.body.appendChild(popupContainer);
+}
+
 async function createFacilityCard(facility) {
   // Create bearer token
   facility.bearer = await createBearer(
@@ -419,24 +534,64 @@ async function createFacilityCard(facility) {
     facility.bearer
   );
 
+  const smartLocksExpanded = await getSmartLockExpanded(
+    facility.stageKey,
+    facility.envKey,
+    facility.propertyID,
+    facility.bearer
+  );
+
+  const lowestBatteryLevel = smartLocksExpanded.reduce((min, device) => {
+    return device.batteryLevel < min ? device.batteryLevel : min;
+  }, Infinity);
+  const lowestSignal = smartLocksExpanded.reduce((min, device) => {
+    return device.signalQuality < min ? device.signalQuality : min;
+  }, Infinity);
+  const offlineCount = smartLocksExpanded.filter(
+    (device) => device.isDeviceOffline === true
+  ).length;
+
   const card = document.createElement("div");
   card.innerHTML = `
-  <h3 id="name">${facility.name}'s Summary</h3>
+  <h3 id="name">
+    <a href="https://portal.${facility.stageKey}insomniaccia${
+    facility.envKey
+  }.com/facility/${facility.propertyID}/dashboard">${
+    facility.name
+  }'s Summary</a>
+  </h3>
   <ul>
-    <li><strong>SmartLocks:</strong></li>
+    <li id="smartlocks"><strong>SmartLocks:</strong></li>
     <ul id="smartlock-list" class="stat-list">
       <li class="stat-item" id="okay">
         <div class="stat-number">${smartLocks.okCount}</div>
-        <div class="stat-label">Okays</div>
+        <div class="stat-label">Good</div>
       </li>
       <li class="stat-item" id="warning">
         <div class="stat-number">${smartLocks.warningCount}</div>
-        <div class="stat-label">Warnings</div>
+        <div class="stat-label">Warning</div>
       </li>
       <li class="stat-item" id="error">
         <div class="stat-number">${smartLocks.errorCount}</div>
-        <div class="stat-label">Errors</div>
+        <div class="stat-label">Error</div>
       </li>
+      </ul>
+      <ul id="smartlock-list" class="stat-list">
+      <li class="stat-item" id="low-battery">
+        <div class="stat-number">${lowestBatteryLevel + "%"}</div>
+        <div class="stat-label">Lowest battery</div>
+      </li>
+      <li class="stat-item" id="low-signal">
+        <div class="stat-number">${
+          Math.round((lowestSignal / 255) * 100) + "%"
+        }</div>
+        <div class="stat-label">Lowest Signal</div>
+      </li>
+      <li class="stat-item" id="offline">
+        <div class="stat-number">${offlineCount}</div>
+        <div class="stat-label">Offline SmartLocks</div>
+      </li>
+      
     </ul>
     <li><strong>Edge Router:</strong></li>
   <ul id="edge-router-list">
@@ -446,7 +601,9 @@ async function createFacilityCard(facility) {
       <strong>eventStatus:</strong> ${edgeRouter.eventStatus}<br>
       <strong>eventStatusMessage:</strong> ${edgeRouter.eventStatusMessage}<br>
       <strong>connectionStatus:</strong> ${edgeRouter.connectionStatus}<br>
-      <strong>connectionStatusMessage:</strong> ${edgeRouter.connectionStatusMessage}
+      <strong>connectionStatusMessage:</strong> ${
+        edgeRouter.connectionStatusMessage
+      }
     </li>
   </ul>
     <li><strong>Access Points:</strong></li>
@@ -458,124 +615,58 @@ async function createFacilityCard(facility) {
     edgeRouterStatus.style.backgroundColor = "#f69697";
   }
 
-  card.querySelector("#name").addEventListener("click", async function () {
+  card
+    .querySelector("#smartlocks")
+    .addEventListener("click", async function () {
+      if (expanedOpened) return false;
+      showLoadingSpinner();
+
+      // Disable scrolling on body
+      document.body.style.overflow = "hidden";
+      expanedOpened = true;
+      disableButtons();
+
+      smartlockExpandedPopUp(smartLocksExpanded, "");
+
+      hideLoadingSpinner();
+    });
+  card.querySelector("#okay").addEventListener("click", async function () {
     if (expanedOpened) return false;
     showLoadingSpinner();
-
-    const smartLocksExpanded = await getSmartLockExpanded(
-      facility.stageKey,
-      facility.envKey,
-      facility.propertyID,
-      facility.bearer
-    );
-    console.log(smartLocksExpanded);
 
     // Disable scrolling on body
     document.body.style.overflow = "hidden";
     expanedOpened = true;
     disableButtons();
 
-    // Create popup container
-    const popupContainer = document.createElement("div");
-    popupContainer.classList.add("expanded-popup-container");
+    smartlockExpandedPopUp(smartLocksExpanded, "ok");
 
-    const expandedSmartLockList = document.createElement("table");
-    expandedSmartLockList.className = "smart-lock-table";
-    const headers = [
-      "Name",
-      "Unit Name",
-      "Device Type",
-      "Signal Quality",
-      "Battery",
-      "Lock State",
-      "Lock Status",
-      "Status Message",
-      "Last Update",
-    ];
-    const thead = document.createElement("thead");
-    const headerRow = document.createElement("tr");
-    headers.forEach((headerText) => {
-      const th = document.createElement("th");
-      th.textContent = headerText;
-      headerRow.appendChild(th);
-    });
-    thead.appendChild(headerRow);
+    hideLoadingSpinner();
+  });
+  card.querySelector("#warning").addEventListener("click", async function () {
+    if (expanedOpened) return false;
+    showLoadingSpinner();
 
-    const tbody = document.createElement("tbody");
+    // Disable scrolling on body
+    document.body.style.overflow = "hidden";
+    expanedOpened = true;
+    disableButtons();
 
-    // Loop through each device in smartLocksExpanded
-    smartLocksExpanded.forEach((device) => {
-      if (device.overallStatus === "ok") {
-        return;
-      }
-      const row = document.createElement("tr");
+    smartlockExpandedPopUp(smartLocksExpanded, "warning");
 
-      // Create a cell for each header and populate it with the corresponding data
-      headers.forEach((header) => {
-        const td = document.createElement("td");
-        switch (header) {
-          case "Name":
-            td.textContent = device.name;
-            break;
-          case "Unit Name":
-            td.textContent = device.unitName;
-            break;
-          case "Device Type":
-            td.textContent = device.deviceType;
-            break;
-          case "Signal Quality":
-            td.textContent = device.signalQualityDisplay;
-            break;
-          case "Battery":
-            td.textContent = device.batteryLevelDisplay;
-            break;
-          case "Lock State":
-            td.textContent = device.lockState;
-            break;
-          case "Lock Status":
-            if (device.overallStatus === "ok") {
-              td.textContent = "✅";
-            } else if (device.overallStatus === "error") {
-              td.textContent = "⛔";
-            } else {
-              td.textContent = "⚠️";
-            }
-            break;
-          case "Status Message":
-            td.textContent = device.statusMessages.join(", ");
-            break;
-          case "Last Update":
-            td.textContent = device.lastUpdateTimestampDisplay;
-            break;
-          default:
-            td.textContent = "";
-            break;
-        }
-        row.appendChild(td);
-      });
+    hideLoadingSpinner();
+  });
+  card.querySelector("#error").addEventListener("click", async function () {
+    if (expanedOpened) return false;
+    showLoadingSpinner();
 
-      // Append the row to the tbody
-      tbody.appendChild(row);
-    });
+    // Disable scrolling on body
+    document.body.style.overflow = "hidden";
+    expanedOpened = true;
+    disableButtons();
 
-    expandedSmartLockList.appendChild(tbody);
-    expandedSmartLockList.appendChild(thead);
-    popupContainer.appendChild(expandedSmartLockList);
+    smartlockExpandedPopUp(smartLocksExpanded, "error");
 
-    // Create close button
-    const closeButton = document.createElement("button");
-    closeButton.textContent = "X";
-    closeButton.classList.add("close-button");
-    closeButton.addEventListener("click", function () {
-      expanedOpened = false;
-      document.body.removeChild(popupContainer);
-      document.body.style.overflow = "";
-      enableButtons();
-    });
-
-    popupContainer.appendChild(closeButton);
-
-    document.body.appendChild(popupContainer);
     hideLoadingSpinner();
   });
 
