@@ -618,8 +618,6 @@ async function createFacilityCard(facility) {
     <ul id="access-points-list"></ul>
   </ul>
   `;
-  console.log(edgeRouter);
-  console.log(accesspoints);
   const edgeRouterStatus = card.querySelector("#edge-router-list li");
   if (edgeRouter.isDeviceOffline) {
     edgeRouterStatus.style.backgroundColor = "#f69697";
