@@ -10,6 +10,7 @@ let jsonData; // Holds JSON data fetched from APIs
 let currentTime; // Holds the current time in milliseconds
 let expirationTime; // Holds the expiration time of the bearer token
 let timeUntilExpiration; // Holds the time until the bearer token expires
+var expanedOpened = false;
 const errorText = document.getElementById("errText");
 
 /*----------------------------------------------------------------
@@ -80,6 +81,31 @@ function uploadCSV(csvContent) {
 }
 
 // Get SmartLock info
+async function getSmartLockExpanded(stageKey, envKey, propertyID, bearer) {
+  try {
+    const response = await fetch(
+      `https://accesscontrol.${stageKey}insomniaccia${envKey}.com/facilities/${propertyID}/smartlockstatus`,
+      {
+        headers: {
+          Authorization: "Bearer " + (await bearer.access_token),
+          accept: "application/json",
+          "api-version": "2.0",
+        },
+      }
+    );
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      throw new Error("Network response was not ok");
+    }
+  } catch (error) {
+    console.error("There was a problem with the fetch operation:", error);
+    return null;
+  }
+}
+
+// Get SmartLock Summary Info
 async function getSmartLock(stageKey, envKey, propertyID, bearer) {
   try {
     const response = await fetch(
@@ -379,6 +405,7 @@ async function createFacilityCard(facility) {
     facility.propertyID,
     facility.bearer
   );
+
   const edgeRouter = await getEdgeRouter(
     facility.stageKey,
     facility.envKey,
@@ -394,40 +421,163 @@ async function createFacilityCard(facility) {
 
   const card = document.createElement("div");
   card.innerHTML = `
-  <h3>${facility.name}'s Summary</h3>
+  <h3 id="name">${facility.name}'s Summary</h3>
   <ul>
-<li><strong>SmartLocks:</strong></li>
-<ul id="smartlock-list" class="stat-list">
-  <li class="stat-item">
-    <div class="stat-number">${smartLocks.okCount}</div>
-    <div class="stat-label">Okays</div>
-  </li>
-  <li class="stat-item">
-    <div class="stat-number">${smartLocks.warningCount}</div>
-    <div class="stat-label">Warnings</div>
-  </li>
-  <li class="stat-item">
-    <div class="stat-number">${smartLocks.errorCount}</div>
-    <div class="stat-label">Errors</div>
-  </li>
-</ul>
-  <li><strong>Edge Router:</strong></li>
+    <li><strong>SmartLocks:</strong></li>
+    <ul id="smartlock-list" class="stat-list">
+      <li class="stat-item" id="okay">
+        <div class="stat-number">${smartLocks.okCount}</div>
+        <div class="stat-label">Okays</div>
+      </li>
+      <li class="stat-item" id="warning">
+        <div class="stat-number">${smartLocks.warningCount}</div>
+        <div class="stat-label">Warnings</div>
+      </li>
+      <li class="stat-item" id="error">
+        <div class="stat-number">${smartLocks.errorCount}</div>
+        <div class="stat-label">Errors</div>
+      </li>
+    </ul>
+    <li><strong>Edge Router:</strong></li>
   <ul id="edge-router-list">
-  <li>
-    <strong>Name:</strong> ${edgeRouter.name}<br>
-    <strong>isDeviceOffline:</strong> ${edgeRouter.isDeviceOffline}<br>
-    <strong>eventStatus:</strong> ${edgeRouter.eventStatus}<br>
-    <strong>eventStatusMessage:</strong> ${edgeRouter.eventStatusMessage}<br>
-    <strong>connectionStatus:</strong> ${edgeRouter.connectionStatus}<br>
-    <strong>connectionStatusMessage:</strong> ${edgeRouter.connectionStatusMessage}</li></ul>
-    <li><strong>Access Points:</strong></li>
-  <ul id="access-points-list"></ul>
+    <li>
+      <strong>Name:</strong> ${edgeRouter.name}<br>
+      <strong>isDeviceOffline:</strong> ${edgeRouter.isDeviceOffline}<br>
+      <strong>eventStatus:</strong> ${edgeRouter.eventStatus}<br>
+      <strong>eventStatusMessage:</strong> ${edgeRouter.eventStatusMessage}<br>
+      <strong>connectionStatus:</strong> ${edgeRouter.connectionStatus}<br>
+      <strong>connectionStatusMessage:</strong> ${edgeRouter.connectionStatusMessage}
+    </li>
   </ul>
-`;
+    <li><strong>Access Points:</strong></li>
+    <ul id="access-points-list"></ul>
+  </ul>
+  `;
   const edgeRouterStatus = card.querySelector("#edge-router-list li");
   if (edgeRouter.isDeviceOffline) {
     edgeRouterStatus.style.backgroundColor = "#f69697";
   }
+
+  card.querySelector("#name").addEventListener("click", async function () {
+    if (expanedOpened) return false;
+    showLoadingSpinner();
+
+    const smartLocksExpanded = await getSmartLockExpanded(
+      facility.stageKey,
+      facility.envKey,
+      facility.propertyID,
+      facility.bearer
+    );
+    console.log(smartLocksExpanded);
+
+    // Disable scrolling on body
+    document.body.style.overflow = "hidden";
+    expanedOpened = true;
+    disableButtons();
+
+    // Create popup container
+    const popupContainer = document.createElement("div");
+    popupContainer.classList.add("expanded-popup-container");
+
+    const expandedSmartLockList = document.createElement("table");
+    expandedSmartLockList.className = "smart-lock-table";
+    const headers = [
+      "Name",
+      "Unit Name",
+      "Device Type",
+      "Signal Quality",
+      "Battery",
+      "Lock State",
+      "Lock Status",
+      "Status Message",
+      "Last Update",
+    ];
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    headers.forEach((headerText) => {
+      const th = document.createElement("th");
+      th.textContent = headerText;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+
+    const tbody = document.createElement("tbody");
+
+    // Loop through each device in smartLocksExpanded
+    smartLocksExpanded.forEach((device) => {
+      if (device.overallStatus === "ok") {
+        return;
+      }
+      const row = document.createElement("tr");
+
+      // Create a cell for each header and populate it with the corresponding data
+      headers.forEach((header) => {
+        const td = document.createElement("td");
+        switch (header) {
+          case "Name":
+            td.textContent = device.name;
+            break;
+          case "Unit Name":
+            td.textContent = device.unitName;
+            break;
+          case "Device Type":
+            td.textContent = device.deviceType;
+            break;
+          case "Signal Quality":
+            td.textContent = device.signalQualityDisplay;
+            break;
+          case "Battery":
+            td.textContent = device.batteryLevelDisplay;
+            break;
+          case "Lock State":
+            td.textContent = device.lockState;
+            break;
+          case "Lock Status":
+            if (device.overallStatus === "ok") {
+              td.textContent = "✅";
+            } else if (device.overallStatus === "error") {
+              td.textContent = "⛔";
+            } else {
+              td.textContent = "⚠️";
+            }
+            break;
+          case "Status Message":
+            td.textContent = device.statusMessages.join(", ");
+            break;
+          case "Last Update":
+            td.textContent = device.lastUpdateTimestampDisplay;
+            break;
+          default:
+            td.textContent = "";
+            break;
+        }
+        row.appendChild(td);
+      });
+
+      // Append the row to the tbody
+      tbody.appendChild(row);
+    });
+
+    expandedSmartLockList.appendChild(tbody);
+    expandedSmartLockList.appendChild(thead);
+    popupContainer.appendChild(expandedSmartLockList);
+
+    // Create close button
+    const closeButton = document.createElement("button");
+    closeButton.textContent = "X";
+    closeButton.classList.add("close-button");
+    closeButton.addEventListener("click", function () {
+      expanedOpened = false;
+      document.body.removeChild(popupContainer);
+      document.body.style.overflow = "";
+      enableButtons();
+    });
+
+    popupContainer.appendChild(closeButton);
+
+    document.body.appendChild(popupContainer);
+    hideLoadingSpinner();
+  });
 
   // Populate access points
   const accessPointsList = card.querySelector("#access-points-list");
@@ -442,6 +592,7 @@ async function createFacilityCard(facility) {
     <strong>Connection:</strong> ${ap.connectionStatus}<br>
     <strong>Connection Message:</strong> ${ap.connectionStatusMessage}
   `;
+
     accessPointsList.appendChild(listItem);
   });
 
@@ -480,7 +631,10 @@ function createImportCard() {
           const csvContent = e.target.result;
           const importedFacilities = uploadCSV(csvContent);
           facilities.push(...importedFacilities);
-          localStorage.setItem("savedFacilities", JSON.stringify(facilities));
+          localStorage.setItem(
+            "savedDashboardFacilities",
+            JSON.stringify(facilities)
+          );
           renderCards(facilities);
         };
         reader.readAsText(file);
@@ -552,7 +706,10 @@ document
     facilities.push(newFacility);
 
     // Save the updated facilities to localStorage
-    localStorage.setItem("savedFacilities", JSON.stringify(facilities));
+    localStorage.setItem(
+      "savedDashboardFacilities",
+      JSON.stringify(facilities)
+    );
 
     // Re-render the cards with the new facility included
     renderCards(facilities);
@@ -568,7 +725,7 @@ document
 async function onWebLoad() {
   // Show loading spinner
   showLoadingSpinner();
-  let facilitiesString = localStorage.getItem("savedFacilities");
+  let facilitiesString = localStorage.getItem("savedDashboardFacilities");
   facilities = facilitiesString ? JSON.parse(facilitiesString) : [];
 
   // Render Cards
