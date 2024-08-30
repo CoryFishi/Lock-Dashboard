@@ -311,33 +311,33 @@ function enableButtons() {
   }
 }
 
-//
-//
-// DarkMode
-//
-//
-let darkMode = localStorage.getItem("darkMode");
-const darkModeToggle = document.querySelector("#darkModeToggle");
-const enableDarkMode = () => {
-  document.body.classList.add("darkmode");
-  localStorage.setItem("darkMode", "enabled");
-};
-const disableDarkMode = () => {
-  document.body.classList.remove("darkmode");
-  localStorage.setItem("darkMode", null);
-};
-darkModeToggle.checked = darkMode === "enabled";
-darkModeToggle.addEventListener("change", () => {
-  checkDarkMode();
-});
-function checkDarkMode() {
-  if (darkModeToggle.checked) {
-    enableDarkMode();
-  } else {
-    disableDarkMode();
-  }
-}
-checkDarkMode();
+// //
+// //
+// // DarkMode
+// //
+// //
+// let darkMode = localStorage.getItem("darkMode");
+// const darkModeToggle = document.querySelector("#darkModeToggle");
+// const enableDarkMode = () => {
+//   document.body.classList.add("darkmode");
+//   localStorage.setItem("darkMode", "enabled");
+// };
+// const disableDarkMode = () => {
+//   document.body.classList.remove("darkmode");
+//   localStorage.setItem("darkMode", null);
+// };
+// darkModeToggle.checked = darkMode === "enabled";
+// darkModeToggle.addEventListener("change", () => {
+//   checkDarkMode();
+// });
+// function checkDarkMode() {
+//   if (darkModeToggle.checked) {
+//     enableDarkMode();
+//   } else {
+//     disableDarkMode();
+//   }
+// }
+// checkDarkMode();
 
 // Function to show loading spinner
 function showLoadingSpinner() {
@@ -363,11 +363,10 @@ async function createFacilityCard(facility) {
     facility.stageKey,
     facility.envKey
   );
-
   // Get the facility name and display it
   const property = await getFacility(
-    facility.stageKey,
-    facility.envKey,
+    facility.stageKey || "",
+    facility.envKey || "",
     facility.propertyID,
     facility.bearer
   );
@@ -458,23 +457,20 @@ function createImportCard() {
   importCard.className = "card import-card";
   importCard.innerHTML = `
     <button class="add-button">+</button>
-    <button class="import-button">Import</button>
-    <button class="export-button">Export</button>
-        <input type="file" id="csv-file-input" style="display:none;" accept=".csv" />
+    
 
   `;
 
-  // Handle the add functionality
   importCard.querySelector(".add-button").addEventListener("click", () => {
-    alert("This modal has not been added yet...");
+    modal.style.display = "block";
   });
 
   // Handle the Import functionality
-  importCard.querySelector(".import-button").addEventListener("click", () => {
+  document.querySelector(".import-button").addEventListener("click", () => {
     document.getElementById("csv-file-input").click(); // Trigger file input click
   });
 
-  importCard
+  document
     .querySelector("#csv-file-input")
     .addEventListener("change", (event) => {
       const file = event.target.files[0];
@@ -491,7 +487,7 @@ function createImportCard() {
       }
     });
 
-  importCard.querySelector(".export-button").addEventListener("click", () => {
+  document.querySelector(".export-button").addEventListener("click", () => {
     const csvContent = convertToCSV(facilities);
     downloadCSV(csvContent);
   });
@@ -511,6 +507,62 @@ async function renderCards(facilities) {
   const importCard = createImportCard();
   cardContainer.appendChild(importCard);
 }
+
+//
+//
+// Modal
+//
+//
+// Get the modal
+const modal = document.getElementById("addFacilityModal");
+
+// Get the <span> element that closes the modal
+const span = document.querySelector(".close");
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function () {
+  modal.style.display = "none";
+};
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function (event) {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }
+};
+
+// Handle form submission
+document
+  .getElementById("addFacilityForm")
+  .addEventListener("submit", function (event) {
+    event.preventDefault(); // Prevent the form from submitting the traditional way
+
+    // Create a new facility object from the form inputs
+    const newFacility = {
+      propertyID: document.getElementById("propertyId").value,
+      username: document.getElementById("apiKey").value,
+      password: document.getElementById("apiSecret").value,
+      clientID: document.getElementById("clientId").value,
+      secretID: document.getElementById("secretId").value,
+      envKey: document.getElementById("environment").value,
+      stageKey: document.getElementById("stagingKey").value,
+    };
+
+    // Add the new facility to the facilities array
+    facilities.push(newFacility);
+
+    // Save the updated facilities to localStorage
+    localStorage.setItem("savedFacilities", JSON.stringify(facilities));
+
+    // Re-render the cards with the new facility included
+    renderCards(facilities);
+
+    // Close the modal
+    modal.style.display = "none";
+
+    // Optionally, clear the form
+    this.reset();
+  });
 
 // On webpage load function
 async function onWebLoad() {
