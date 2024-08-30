@@ -394,6 +394,7 @@ async function smartlockExpandedPopUp(smartLocksExpanded, value) {
     "Battery",
     "Lock State",
     "Tenant",
+    "Unit Status",
     "Lock Status",
     "Status Message",
     "Last Update",
@@ -448,13 +449,16 @@ async function smartlockExpandedPopUp(smartLocksExpanded, value) {
         case "Tenant":
           td.textContent = device.visitorName;
           break;
+        case "Unit Status":
+          td.textContent = device.unitStatus;
+          break;
         case "Lock Status":
           if (device.overallStatus === "ok") {
-            td.textContent = "✅";
+            td.textContent = "✅ Good";
           } else if (device.overallStatus === "error") {
-            td.textContent = "⛔";
+            td.textContent = "⛔ Error";
           } else {
-            td.textContent = "⚠️";
+            td.textContent = "⚠️ Warning";
           }
           break;
         case "Status Message":
@@ -550,15 +554,20 @@ async function createFacilityCard(facility) {
   const offlineCount = smartLocksExpanded.filter(
     (device) => device.isDeviceOffline === true
   ).length;
+  const readableEdgeRouterDate = new Date(
+    edgeRouter.lastCommunicationOn
+  ).toLocaleString();
 
   const card = document.createElement("div");
   card.innerHTML = `
   <h3 id="name">
     <a href="https://portal.${facility.stageKey}insomniaccia${
     facility.envKey
-  }.com/facility/${facility.propertyID}/dashboard">${
-    facility.name
-  }'s Summary</a>
+  }.com/facility/${facility.propertyID}/dashboard" title="https://portal.${
+    facility.stageKey
+  }insomniaccia${facility.envKey}.com/facility/${
+    facility.propertyID
+  }/dashboard">${facility.name}'s Summary</a>
   </h3>
   <ul>
     <li id="smartlocks"><strong>SmartLocks:</strong></li>
@@ -593,28 +602,28 @@ async function createFacilityCard(facility) {
       </li>
       
     </ul>
-    <li><strong>Edge Router:</strong></li>
+    <li id="edgeRouter" title="Edge Routers & Access Points"><strong>OpenNet:</strong></li>
   <ul id="edge-router-list">
-    <li>
-      <strong>Name:</strong> ${edgeRouter.name}<br>
-      <strong>isDeviceOffline:</strong> ${edgeRouter.isDeviceOffline}<br>
-      <strong>eventStatus:</strong> ${edgeRouter.eventStatus}<br>
-      <strong>eventStatusMessage:</strong> ${edgeRouter.eventStatusMessage}<br>
-      <strong>connectionStatus:</strong> ${edgeRouter.connectionStatus}<br>
-      <strong>connectionStatusMessage:</strong> ${
-        edgeRouter.connectionStatusMessage
-      }
+    <li id="edgeRouterLi">
+      <div>
+        <span class="status-circle" style="background-color: ${
+          edgeRouter.isDeviceOffline ? "red" : "green"
+        };" title="${edgeRouter.isDeviceOffline ? "Offline" : "Online"}"></span>
+      </div>
+      <div>
+      <p title="Name of Edge Router">${edgeRouter.name}</p>
+      <p title="Last Communication Date">${readableEdgeRouterDate}</p>
+      </div>
     </li>
-  </ul>
-    <li><strong>Access Points:</strong></li>
     <ul id="access-points-list"></ul>
   </ul>
   `;
+  console.log(edgeRouter);
+  console.log(accesspoints);
   const edgeRouterStatus = card.querySelector("#edge-router-list li");
   if (edgeRouter.isDeviceOffline) {
     edgeRouterStatus.style.backgroundColor = "#f69697";
   }
-
   card
     .querySelector("#smartlocks")
     .addEventListener("click", async function () {
@@ -674,14 +683,21 @@ async function createFacilityCard(facility) {
   const accessPointsList = card.querySelector("#access-points-list");
   accesspoints.forEach((ap) => {
     const listItem = document.createElement("li");
+    const readableDate = new Date(ap.lastUpdateTimestamp).toLocaleString();
     if (ap.isDeviceOffline) {
       listItem.style.backgroundColor = "#f69697";
     }
+    listItem.id = "edgeRouterLi";
     listItem.innerHTML = `
-    <strong>Name:</strong> ${ap.name}<br>
-    <strong>Offline:</strong> ${ap.isDeviceOffline}<br>
-    <strong>Connection:</strong> ${ap.connectionStatus}<br>
-    <strong>Connection Message:</strong> ${ap.connectionStatusMessage}
+    <div>
+        <span class="status-circle" style="background-color: ${
+          ap.isDeviceOffline ? "red" : "green"
+        };" title="${ap.isDeviceOffline ? "Offline" : "Online"}"></span>
+      </div>
+    <div>
+      <p title="Name of Access Point">${ap.name}</p>
+      <p title="Last Status Change">${readableDate}</p>
+    </div>
   `;
 
     accessPointsList.appendChild(listItem);

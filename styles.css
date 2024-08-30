@@ -188,11 +188,11 @@ nav .left p {
 .card ul {
   list-style-type: none;
   padding: 0;
-  margin: 16px 0 0 0;
+  margin: 0;
 }
 
 .card ul li {
-  margin-bottom: 12px;
+  margin-bottom: 0px;
 }
 
 .card ul li strong {
@@ -201,23 +201,21 @@ nav .left p {
 
 /* Access point styling */
 #access-points-list {
-  margin-top: 12px;
-  border-top: 1px solid #f0f0f0;
-  padding-top: 12px;
+  margin-top: 4px;
+  padding-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px;
 }
 
 #access-points-list li {
   padding: 8px;
   background-color: #f9f9f9;
   border-radius: 4px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 /* SmartLocks styling */
-#smartlock-list {
-  margin-top: 12px;
-  border-top: 1px solid #f0f0f0;
-}
 
 #smartlock-list li {
   padding: 8px;
@@ -227,9 +225,22 @@ nav .left p {
 
 /* Edge Router styling */
 #edge-router-list {
-  margin-top: 12px;
-  border-top: 1px solid #f0f0f0;
-  padding-top: 12px;
+  margin-top: 4px;
+  padding-top: 8px;
+}
+
+#edgeRouterLi {
+  display: flex;
+  align-items: center;
+}
+
+.status-circle {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
 }
 
 #edge-router-list li {
@@ -241,26 +252,26 @@ nav .left p {
 
 .stat-list {
   display: flex;
-  justify-content: space-around; /* Distribute items evenly with space between them */
+  justify-content: space-around;
   padding: 0;
   margin: 0;
-  list-style-type: none; /* Remove default list styling */
+  list-style-type: none;
 }
 
 .stat-item {
   text-align: center;
   margin: 10px;
-  flex: 1; /* Each stat-item takes equal width */
+  flex: 1;
 }
 
 .stat-number {
-  font-size: 2em; /* Larger font size for the number */
+  font-size: 2em;
   font-weight: bold;
   color: #333;
 }
 
 .stat-label {
-  font-size: 1em; /* Normal font size for the label */
+  font-size: 1em;
   color: #666;
 }
 .import-card {
@@ -421,6 +432,10 @@ form input {
   right: 10px;
   cursor: pointer;
   background-color: rgba(255, 0, 0, 0.486);
+  color: white;
+  border-radius: 25%;
+  border: none;
+  padding: 4px 8px;
 }
 
 table {
@@ -452,6 +467,13 @@ tr:hover {
 #name,
 #smartlocks {
   cursor: pointer;
+}
+#smartlocks,
+#edgeRouter,
+#accessPoints {
+  margin-top: 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 a {
