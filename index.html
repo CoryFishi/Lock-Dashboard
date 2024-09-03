@@ -52,26 +52,46 @@
         <span class="close">&times;</span>
         <h2>Add New Facility</h2>
         <form id="addFacilityForm">
-          <label for="propertyId">Property Id:</label>
+          <label for="propertyId"
+            >Property Id:<span style="color: red">*</span></label
+          >
           <input type="text" id="propertyId" name="propertyId" required /><br />
 
-          <label for="apiKey">API Key:</label>
+          <label for="apiKey">API Key:<span style="color: red">*</span></label>
           <input type="text" id="apiKey" name="apiKey" required /><br />
 
-          <label for="apiSecret">API Secret:</label>
+          <label for="apiSecret"
+            >API Secret:<span style="color: red">*</span></label
+          >
           <input type="text" id="apiSecret" name="apiSecret" required /><br />
 
-          <label for="clientId">Client Id:</label>
+          <label for="clientId"
+            >Client Id:<span style="color: red">*</span></label
+          >
           <input type="text" id="clientId" name="clientId" required /><br />
 
-          <label for="secretId">Secret Id:</label>
+          <label for="secretId"
+            >Client Secret:<span style="color: red">*</span></label
+          >
           <input type="text" id="secretId" name="secretId" required /><br />
 
-          <label for="environment">Environment: *Leave blank for Prod*</label>
-          <input type="text" id="environment" name="environment" /><br />
+          <label for="environment"
+            >Environment:<span style="color: red">*</span></label
+          >
+          <select id="environment" name="environment">
+            <option value="">Production</option>
+            <option value="-dev">Development</option>
+            <option value="-qa">QA</option>
+            <option value="">Staging</option></select
+          ><br />
 
-          <label for="stagingKey">Staging Key: *Leave blank for Prod*</label>
-          <input type="text" id="stagingKey" name="stagingKey" /><br />
+          <label for="stagingKey"
+            >Staging:<span style="color: red">*</span></label
+          >
+          <select id="stagingKey" name="stagingKey">
+            <option value="">False</option>
+            <option value="cia-stg-1.aws.">True</option></select
+          ><br />
 
           <button type="submit" class="submit-button">Add Facility</button>
         </form>

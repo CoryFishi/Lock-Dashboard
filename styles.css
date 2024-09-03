@@ -67,6 +67,7 @@ body {
   left: 50%;
   top: 250px;
   transform: translate(-50%);
+  z-index: 9999;
 }
 
 .spinner {
@@ -107,6 +108,7 @@ nav {
   height: 60px;
   padding: 0 20px;
   box-shadow: 0 2px 4px var(--table-border);
+  z-index: 9999;
 }
 
 nav .left,
@@ -165,6 +167,7 @@ nav .left p {
   max-height: 69vh;
   min-height: 69vh;
   overflow-y: auto;
+  position: relative;
 }
 
 @media (max-width: 768px) {
@@ -366,20 +369,25 @@ nav .left p {
   width: 80%;
   max-width: 500px;
   border-radius: 8px;
+  padding-bottom: 70px;
 }
 
 /* The Close Button */
 .close {
-  color: #aaa;
+  color: white;
+  background: transparent;
+  font-size: 20px;
+  border-radius: 25%;
+  background-color: rgba(255, 0, 0, 0.5);
   float: right;
   font-size: 28px;
+  padding: 0px 6px;
   font-weight: bold;
 }
 
 .close:hover,
 .close:focus {
-  color: black;
-  text-decoration: none;
+  color: #d00000;
   cursor: pointer;
 }
 
@@ -389,7 +397,8 @@ form label {
   margin: 10px 0 5px;
 }
 
-form input {
+form input,
+form select {
   width: 100%;
   padding: 8px;
   box-sizing: border-box;
@@ -398,17 +407,18 @@ form input {
 }
 
 .submit-button {
-  margin: 10px 0 5px;
-  background-color: #28a745;
+  margin-top: 20px;
+  float: right;
+  padding: 8px 16px;
+  background-color: #007bff;
   color: white;
-  padding: 10px 20px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
 
 .submit-button:hover {
-  background-color: #218838;
+  background-color: #003cff;
 }
 
 .expanded-popup-container {
@@ -465,8 +475,10 @@ tr:hover {
 #error,
 #warning,
 #okay,
-#name,
-#smartlocks {
+#smartlocks,
+#offline,
+#low-battery,
+#low-signal {
   cursor: pointer;
 }
 #smartlocks,
@@ -477,7 +489,39 @@ tr:hover {
   border-bottom: 1px solid #f0f0f0;
 }
 
-a {
-  color: black;
+.delete-card-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: transparent;
+  cursor: pointer;
+  background-color: rgba(255, 0, 0, 0.5);
+  color: white;
+  font-size: 20px;
+  border-radius: 25%;
+  border: none;
+  padding: 1px 6px;
+}
+
+.delete-card-btn:hover {
+  color: #d00000;
+}
+
+.link-card-btn {
+  position: absolute;
+  top: 5px;
+  right: 30px;
+  background: transparent;
+  cursor: pointer;
+  background-color: #007bff81;
+  color: white;
+  font-size: 15px;
+  border-radius: 25%;
+  border: none;
+  padding: 3px 6px;
   text-decoration: none;
+}
+
+.link-card-btn:hover {
+  color: #000000;
 }

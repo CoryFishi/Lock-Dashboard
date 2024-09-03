@@ -137,7 +137,7 @@ async function getAccessPoints(stageKey, envKey, propertyID, bearer) {
       `https://accesscontrol.${stageKey}insomniaccia${envKey}.com/facilities/${propertyID}/edgerouterplatformdevicesstatus`,
       {
         headers: {
-          Authorization: "Bearer " + (await bearerToken.access_token),
+          Authorization: "Bearer " + (await bearer.access_token),
           accept: "application/json",
           "api-version": "2.0",
         },
@@ -379,7 +379,7 @@ function hideLoadingSpinner() {
   spinner.classList.add("hidden");
 }
 
-async function smartlockExpandedPopUp(smartLocksExpanded, value) {
+async function smartlockExpandedPopUp(smartLocksExpanded, value, option) {
   // Create popup container
   const popupContainer = document.createElement("div");
   popupContainer.classList.add("expanded-popup-container");
@@ -413,7 +413,11 @@ async function smartlockExpandedPopUp(smartLocksExpanded, value) {
   // Loop through each device in smartLocksExpanded
   smartLocksExpanded.forEach((device) => {
     const row = document.createElement("tr");
-    if (device.overallStatus !== value && value !== "") {
+    if (
+      device.overallStatus !== value &&
+      value !== "" &&
+      option === "overallStatus"
+    ) {
       return;
     }
 
@@ -517,6 +521,7 @@ async function createFacilityCard(facility) {
   );
   facility.name = property.name;
   facility.address = property.addressLine1;
+  facility.uniqueID = `${facility.propertyID}-${Date.now()}`;
 
   const smartLocks = await getSmartLock(
     facility.stageKey,
@@ -548,80 +553,102 @@ async function createFacilityCard(facility) {
   const lowestBatteryLevel = smartLocksExpanded.reduce((min, device) => {
     return device.batteryLevel < min ? device.batteryLevel : min;
   }, Infinity);
+  const devicesWithLowestBattery = smartLocksExpanded.filter(
+    (device) => device.batteryLevel === lowestBatteryLevel
+  );
+
   const lowestSignal = smartLocksExpanded.reduce((min, device) => {
     return device.signalQuality < min ? device.signalQuality : min;
   }, Infinity);
-  const offlineCount = smartLocksExpanded.filter(
+  const devicesWithLowestSignal = smartLocksExpanded.filter(
+    (device) => device.signalQuality === lowestSignal
+  );
+
+  const devicesOffline = smartLocksExpanded.filter(
     (device) => device.isDeviceOffline === true
-  ).length;
+  );
+
+  smartLocksExpanded.sort((a, b) => a.name.localeCompare(b.name));
+  accesspoints.sort((a, b) => a.name.localeCompare(b.name));
+  devicesWithLowestBattery.sort((a, b) => a.name.localeCompare(b.name));
+  devicesWithLowestSignal.sort((a, b) => a.name.localeCompare(b.name));
+  devicesOffline.sort((a, b) => a.name.localeCompare(b.name));
+
   const readableEdgeRouterDate = new Date(
     edgeRouter.lastCommunicationOn
   ).toLocaleString();
 
   const card = document.createElement("div");
   card.innerHTML = `
-  <h3 id="name">
+    <h3 id="name">
+      ${facility.name}'s Summary
+    </h3>
+    <button class="delete-card-btn" title="Delete">&times;</button>
     <a href="https://portal.${facility.stageKey}insomniaccia${
     facility.envKey
-  }.com/facility/${facility.propertyID}/dashboard" title="https://portal.${
+  }.com/facility/${
+    facility.propertyID
+  }/dashboard" class="link-card-btn" title="https://portal.${
     facility.stageKey
   }insomniaccia${facility.envKey}.com/facility/${
     facility.propertyID
-  }/dashboard">${facility.name}'s Summary</a>
-  </h3>
-  <ul>
-    <li id="smartlocks"><strong>SmartLocks:</strong></li>
-    <ul id="smartlock-list" class="stat-list">
-      <li class="stat-item" id="okay">
-        <div class="stat-number">${smartLocks.okCount}</div>
-        <div class="stat-label">Good</div>
-      </li>
-      <li class="stat-item" id="warning">
-        <div class="stat-number">${smartLocks.warningCount}</div>
-        <div class="stat-label">Warning</div>
-      </li>
-      <li class="stat-item" id="error">
-        <div class="stat-number">${smartLocks.errorCount}</div>
-        <div class="stat-label">Error</div>
-      </li>
+  }/dashboard">➚</a>
+    <ul>
+      <li id="smartlocks" title="View all SmartLocks"><strong>SmartLocks:</strong></li>
+      <ul id="smartlock-list" class="stat-list">
+        <li class="stat-item" id="okay" title="View all Good">
+          <div class="stat-number">${smartLocks.okCount}</div>
+          <div class="stat-label">Good</div>
+        </li>
+        <li class="stat-item" id="warning" title="View all Warnings">
+          <div class="stat-number">${smartLocks.warningCount}</div>
+          <div class="stat-label">Warning</div>
+        </li>
+        <li class="stat-item" id="error" title="View all Errors">
+          <div class="stat-number">${smartLocks.errorCount}</div>
+          <div class="stat-label">Error</div>
+        </li>
       </ul>
       <ul id="smartlock-list" class="stat-list">
-      <li class="stat-item" id="low-battery">
-        <div class="stat-number">${lowestBatteryLevel + "%"}</div>
-        <div class="stat-label">Lowest battery</div>
+        <li class="stat-item" id="low-battery" title="View the Lowest Battery">
+          <div class="stat-number">${lowestBatteryLevel + "%"}</div>
+          <div class="stat-label">Lowest battery</div>
+        </li>
+        <li class="stat-item" id="low-signal" title="View the Lowest Signal Quality">
+          <div class="stat-number">${
+            Math.round((lowestSignal / 255) * 100) + "%"
+          }</div>
+          <div class="stat-label">Lowest Signal</div>
+        </li>
+        <li class="stat-item" id="offline" title="View all the offline SmartLocks">
+          <div class="stat-number">${devicesOffline.length}</div>
+          <div class="stat-label">Offline SmartLocks</div>
+        </li>
+      </ul>
+      <li id="edgeRouter" title="Edge Routers & Access Points"><strong>OpenNet:</strong></li>
+    <ul id="edge-router-list">
+      <li id="edgeRouterLi">
+        <div>
+          <span class="status-circle" style="background-color: ${
+            edgeRouter.isDeviceOffline ? "red" : "green"
+          };" title="${
+    edgeRouter.isDeviceOffline ? "Offline" : "Online"
+  }"></span>
+        </div>
+        <div>
+        <p title="Name of Edge Router"><b>${edgeRouter.name}</b></p>
+        <p title="Last Communication Date">${readableEdgeRouterDate}</p>
+        </div>
       </li>
-      <li class="stat-item" id="low-signal">
-        <div class="stat-number">${
-          Math.round((lowestSignal / 255) * 100) + "%"
-        }</div>
-        <div class="stat-label">Lowest Signal</div>
-      </li>
-      <li class="stat-item" id="offline">
-        <div class="stat-number">${offlineCount}</div>
-        <div class="stat-label">Offline SmartLocks</div>
-      </li>
-      
+      <ul id="access-points-list"></ul>
     </ul>
-    <li id="edgeRouter" title="Edge Routers & Access Points"><strong>OpenNet:</strong></li>
-  <ul id="edge-router-list">
-    <li id="edgeRouterLi">
-      <div>
-        <span class="status-circle" style="background-color: ${
-          edgeRouter.isDeviceOffline ? "red" : "green"
-        };" title="${edgeRouter.isDeviceOffline ? "Offline" : "Online"}"></span>
-      </div>
-      <div>
-      <p title="Name of Edge Router">${edgeRouter.name}</p>
-      <p title="Last Communication Date">${readableEdgeRouterDate}</p>
-      </div>
-    </li>
-    <ul id="access-points-list"></ul>
-  </ul>
   `;
+
   const edgeRouterStatus = card.querySelector("#edge-router-list li");
   if (edgeRouter.isDeviceOffline) {
     edgeRouterStatus.style.backgroundColor = "#f69697";
   }
+
   card
     .querySelector("#smartlocks")
     .addEventListener("click", async function () {
@@ -633,10 +660,11 @@ async function createFacilityCard(facility) {
       expanedOpened = true;
       disableButtons();
 
-      smartlockExpandedPopUp(smartLocksExpanded, "");
+      smartlockExpandedPopUp(smartLocksExpanded, "", "");
 
       hideLoadingSpinner();
     });
+
   card.querySelector("#okay").addEventListener("click", async function () {
     if (expanedOpened) return false;
     showLoadingSpinner();
@@ -646,10 +674,11 @@ async function createFacilityCard(facility) {
     expanedOpened = true;
     disableButtons();
 
-    smartlockExpandedPopUp(smartLocksExpanded, "ok");
+    smartlockExpandedPopUp(smartLocksExpanded, "ok", "overallStatus");
 
     hideLoadingSpinner();
   });
+
   card.querySelector("#warning").addEventListener("click", async function () {
     if (expanedOpened) return false;
     showLoadingSpinner();
@@ -659,20 +688,67 @@ async function createFacilityCard(facility) {
     expanedOpened = true;
     disableButtons();
 
-    smartlockExpandedPopUp(smartLocksExpanded, "warning");
+    smartlockExpandedPopUp(smartLocksExpanded, "warning", "overallStatus");
 
     hideLoadingSpinner();
   });
+
   card.querySelector("#error").addEventListener("click", async function () {
     if (expanedOpened) return false;
     showLoadingSpinner();
 
-    // Disable scrolling on body
     document.body.style.overflow = "hidden";
     expanedOpened = true;
     disableButtons();
 
-    smartlockExpandedPopUp(smartLocksExpanded, "error");
+    smartlockExpandedPopUp(smartLocksExpanded, "error", "overallStatus");
+
+    hideLoadingSpinner();
+  });
+
+  card
+    .querySelector("#low-battery")
+    .addEventListener("click", async function () {
+      if (expanedOpened) return false;
+      showLoadingSpinner();
+
+      document.body.style.overflow = "hidden";
+      expanedOpened = true;
+      disableButtons();
+
+      smartlockExpandedPopUp(
+        devicesWithLowestBattery,
+        "error",
+        "lowestBattery"
+      );
+
+      hideLoadingSpinner();
+    });
+
+  card
+    .querySelector("#low-signal")
+    .addEventListener("click", async function () {
+      if (expanedOpened) return false;
+      showLoadingSpinner();
+
+      document.body.style.overflow = "hidden";
+      expanedOpened = true;
+      disableButtons();
+
+      smartlockExpandedPopUp(devicesWithLowestSignal, "error", "lowestSignal");
+
+      hideLoadingSpinner();
+    });
+
+  card.querySelector("#offline").addEventListener("click", async function () {
+    if (expanedOpened) return false;
+    showLoadingSpinner();
+
+    document.body.style.overflow = "hidden";
+    expanedOpened = true;
+    disableButtons();
+
+    smartlockExpandedPopUp(devicesOffline, "error", "offline");
 
     hideLoadingSpinner();
   });
@@ -687,22 +763,40 @@ async function createFacilityCard(facility) {
     }
     listItem.id = "edgeRouterLi";
     listItem.innerHTML = `
-    <div>
+      <div>
         <span class="status-circle" style="background-color: ${
           ap.isDeviceOffline ? "red" : "green"
         };" title="${ap.isDeviceOffline ? "Offline" : "Online"}"></span>
       </div>
-    <div>
-      <p title="Name of Access Point">${ap.name}</p>
-      <p title="Last Status Change">${readableDate}</p>
-    </div>
-  `;
+      <div>
+        <p title="Name of Access Point"><b>${ap.name}</b></p>
+        <p title="Last Status Change">${readableDate}</p>
+      </div>
+    `;
 
     accessPointsList.appendChild(listItem);
   });
 
-  // Add card styling
   card.className = "card";
+  card.id = `card-${facility.uniqueID}`;
+
+  // Add the delete button functionality
+  card.querySelector(".delete-card-btn").addEventListener("click", function () {
+    // Remove the card from the DOM
+    card.remove();
+
+    // Delete the facility from the savedDashboardFacilities object using the uniqueID
+    const savedFacilities = facilities.filter(
+      (f) => f.uniqueID !== facility.uniqueID
+    );
+    facilities = savedFacilities;
+
+    // Update localStorage with the modified object
+    localStorage.setItem(
+      "savedDashboardFacilities",
+      JSON.stringify(savedFacilities)
+    );
+  });
 
   // Append the card to the container
   document.getElementById("card-container").appendChild(card);
@@ -711,19 +805,14 @@ async function createFacilityCard(facility) {
 function createImportCard() {
   const importCard = document.createElement("div");
   importCard.className = "card import-card";
-  importCard.innerHTML = `
-    <button class="add-button">+</button>
-    
-
-  `;
+  importCard.innerHTML = `<button class="add-button">+</button>`;
 
   importCard.querySelector(".add-button").addEventListener("click", () => {
     modal.style.display = "block";
   });
 
-  // Handle the Import functionality
   document.querySelector(".import-button").addEventListener("click", () => {
-    document.getElementById("csv-file-input").click(); // Trigger file input click
+    document.getElementById("csv-file-input").click();
   });
 
   document
@@ -798,6 +887,7 @@ document
 
     // Create a new facility object from the form inputs
     const newFacility = {
+      id: document.getElementById("propertyId").value + Date.now(),
       propertyID: document.getElementById("propertyId").value,
       username: document.getElementById("apiKey").value,
       password: document.getElementById("apiSecret").value,
