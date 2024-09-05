@@ -580,7 +580,7 @@ async function createFacilityCard(facility) {
 
   const card = document.createElement("div");
   card.innerHTML = `
-    <h3 id="name">
+    <h3 id="name" class="bold">
       ${facility.name}'s Summary
     </h3>
     <button class="delete-card-btn" title="Delete">&times;</button>
@@ -636,7 +636,7 @@ async function createFacilityCard(facility) {
   }"></span>
         </div>
         <div>
-        <p title="Name of Edge Router"><b>${edgeRouter.name}</b></p>
+        <p class="bold" title="Name of Edge Router">${edgeRouter.name}</p>
         <p title="Last Communication Date">${readableEdgeRouterDate}</p>
         </div>
       </li>
@@ -769,7 +769,7 @@ async function createFacilityCard(facility) {
         };" title="${ap.isDeviceOffline ? "Offline" : "Online"}"></span>
       </div>
       <div>
-        <p title="Name of Access Point"><b>${ap.name}</b></p>
+        <p class="bold" title="Name of Access Point">${ap.name}</p>
         <p title="Last Status Change">${readableDate}</p>
       </div>
     `;
