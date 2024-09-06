@@ -342,28 +342,28 @@ function enableButtons() {
 // // DarkMode
 // //
 // //
-// let darkMode = localStorage.getItem("darkMode");
-// const darkModeToggle = document.querySelector("#darkModeToggle");
-// const enableDarkMode = () => {
-//   document.body.classList.add("darkmode");
-//   localStorage.setItem("darkMode", "enabled");
-// };
-// const disableDarkMode = () => {
-//   document.body.classList.remove("darkmode");
-//   localStorage.setItem("darkMode", null);
-// };
-// darkModeToggle.checked = darkMode === "enabled";
-// darkModeToggle.addEventListener("change", () => {
-//   checkDarkMode();
-// });
-// function checkDarkMode() {
-//   if (darkModeToggle.checked) {
-//     enableDarkMode();
-//   } else {
-//     disableDarkMode();
-//   }
-// }
-// checkDarkMode();
+let darkMode = localStorage.getItem("darkMode");
+const darkModeToggle = document.querySelector("#darkModeToggle");
+const enableDarkMode = () => {
+  document.body.classList.add("darkmode");
+  localStorage.setItem("darkMode", "enabled");
+};
+const disableDarkMode = () => {
+  document.body.classList.remove("darkmode");
+  localStorage.setItem("darkMode", null);
+};
+darkModeToggle.checked = darkMode === "enabled";
+darkModeToggle.addEventListener("change", () => {
+  checkDarkMode();
+});
+function checkDarkMode() {
+  if (darkModeToggle.checked) {
+    enableDarkMode();
+  } else {
+    disableDarkMode();
+  }
+}
+checkDarkMode();
 
 // Function to show loading spinner
 function showLoadingSpinner() {
@@ -384,8 +384,11 @@ async function smartlockExpandedPopUp(smartLocksExpanded, value, option) {
   const popupContainer = document.createElement("div");
   popupContainer.classList.add("expanded-popup-container");
 
-  const expandedSmartLockList = document.createElement("table");
-  expandedSmartLockList.className = "smart-lock-table";
+  const tableContainer = document.createElement("div");
+  tableContainer.classList.add("table-container");
+
+  const expandedSmartLockTable = document.createElement("table");
+  expandedSmartLockTable.className = "smart-lock-table";
   const headers = [
     "Name",
     "Unit",
@@ -393,10 +396,8 @@ async function smartlockExpandedPopUp(smartLocksExpanded, value, option) {
     "Signal Quality",
     "Battery",
     "Lock State",
-    "Tenant",
-    "Unit Status",
-    "Lock Status",
-    "Status Message",
+    "Unit Details",
+    "Lock Status Message",
     "Last Update",
   ];
   const thead = document.createElement("thead");
@@ -450,23 +451,21 @@ async function smartlockExpandedPopUp(smartLocksExpanded, value, option) {
         case "Lock State":
           td.textContent = device.lockState;
           break;
-        case "Tenant":
-          td.textContent = device.visitorName;
-          break;
-        case "Unit Status":
-          td.textContent = device.unitStatus;
-          break;
-        case "Lock Status":
-          if (device.overallStatus === "ok") {
-            td.textContent = "✅ Good";
-          } else if (device.overallStatus === "error") {
-            td.textContent = "⛔ Error";
+        case "Unit Details":
+          if (device.visitorName === null) {
+            td.textContent = device.unitStatus;
           } else {
-            td.textContent = "⚠️ Warning";
+            td.textContent = device.unitStatus + " - " + device.visitorName;
           }
           break;
-        case "Status Message":
-          td.textContent = device.statusMessages.join(", ");
+        case "Lock Status Message":
+          if (device.overallStatus === "ok") {
+            td.textContent = "✅ SmartLock is Online";
+          } else if (device.overallStatus === "error") {
+            td.textContent = "⛔" + device.statusMessages.join(", ");
+          } else {
+            td.textContent = "⚠️" + device.statusMessages.join(", ");
+          }
           break;
         case "Last Update":
           td.textContent = device.lastUpdateTimestampDisplay;
@@ -482,9 +481,10 @@ async function smartlockExpandedPopUp(smartLocksExpanded, value, option) {
     tbody.appendChild(row);
   });
 
-  expandedSmartLockList.appendChild(tbody);
-  expandedSmartLockList.appendChild(thead);
-  popupContainer.appendChild(expandedSmartLockList);
+  expandedSmartLockTable.appendChild(tbody);
+  expandedSmartLockTable.appendChild(thead);
+  tableContainer.appendChild(expandedSmartLockTable);
+  popupContainer.appendChild(tableContainer);
 
   // Create close button
   const closeButton = document.createElement("button");
@@ -594,7 +594,7 @@ async function createFacilityCard(facility) {
     facility.propertyID
   }/dashboard">➚</a>
     <ul>
-      <li id="smartlocks" title="View all SmartLocks"><strong>SmartLocks:</strong></li>
+      <li id="smartlocks" class="bold" title="View all SmartLocks"><strong>SmartLocks:</strong></li>
       <ul id="smartlock-list" class="stat-list">
         <li class="stat-item" id="okay" title="View all Good">
           <div class="stat-number">${smartLocks.okCount}</div>
@@ -625,7 +625,7 @@ async function createFacilityCard(facility) {
           <div class="stat-label">Offline SmartLocks</div>
         </li>
       </ul>
-      <li id="edgeRouter" title="Edge Routers & Access Points"><strong>OpenNet:</strong></li>
+      <li id="edgeRouter" class="bold" title="Edge Routers & Access Points"><strong>OpenNet:</strong></li>
     <ul id="edge-router-list">
       <li id="edgeRouterLi">
         <div>
@@ -809,6 +809,7 @@ function createImportCard() {
 
   importCard.querySelector(".add-button").addEventListener("click", () => {
     modal.style.display = "block";
+    disableButtons();
   });
 
   document.querySelector(".import-button").addEventListener("click", () => {
@@ -870,12 +871,14 @@ const span = document.querySelector(".close");
 // When the user clicks on <span> (x), close the modal
 span.onclick = function () {
   modal.style.display = "none";
+  enableButtons();
 };
 
 // When the user clicks anywhere outside of the modal, close it
 window.onclick = function (event) {
   if (event.target == modal) {
     modal.style.display = "none";
+    enableButtons();
   }
 };
 

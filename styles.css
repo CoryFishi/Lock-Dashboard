@@ -20,6 +20,7 @@
   --table-hover: #d0d7d9;
   --text-black: black;
   --text-white: white;
+  --card-background: white;
 }
 
 .darkmode {
@@ -32,6 +33,7 @@
   --table-border: #1d2125;
   --table-header: #2c333a;
   --table-hover: #22272b;
+  --card-background: #2c333a;
 }
 
 * {
@@ -163,9 +165,9 @@ nav .left p {
   max-width: calc(33.333% - 32px);
   box-sizing: border-box;
   padding: 16px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--table-border);
   border-radius: 8px;
-  background-color: #fff;
+  background-color: var(--card-background);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   max-height: 69vh;
   min-height: 69vh;
@@ -187,6 +189,9 @@ nav .left p {
     flex: 1 1 calc(100% - 32px);
     max-width: calc(100% - 32px);
   }
+  .darkModeCheckbox {
+    display: none;
+  }
 }
 
 /* Adjust to 1 card per row for small screens */
@@ -198,8 +203,7 @@ nav .left p {
 
 .card h3 {
   margin-top: 0;
-  color: #333;
-  border-bottom: 2px solid #f0f0f0;
+  color: var(--body-text);
   padding-bottom: 8px;
 }
 
@@ -214,7 +218,8 @@ nav .left p {
 }
 
 .card ul li strong {
-  color: #007bff;
+  color: var(--clickable-blue);
+  font-weight: bold;
 }
 
 /* Access point styling */
@@ -264,6 +269,7 @@ nav .left p {
 #edge-router-list li {
   padding: 8px;
   background-color: #f9f9f9;
+  color: black;
   border-radius: 4px;
   margin-bottom: 8px;
 }
@@ -300,11 +306,12 @@ nav .left p {
   box-shadow: none;
   border: none;
   min-height: 60vh;
+  background-color: #00000000;
 }
 
 .add-button {
   font-size: 4em;
-  background-color: #007bff5e;
+  background-color: var(--clickable-blue);
   color: white;
   border: none;
   cursor: pointer;
@@ -334,7 +341,7 @@ nav .left p {
 .import-button,
 .export-button {
   font-size: 1.2em;
-  background-color: #007bff;
+  background-color: var(--clickable-blue);
   color: white;
   border: none;
   border-radius: 8px;
@@ -376,10 +383,10 @@ nav .left p {
 
 /* Modal Content/Box */
 .modal-content {
-  background-color: #fefefe;
+  background-color: var(--body-background);
   margin: 8% auto;
   padding: 20px;
-  border: 1px solid #888;
+  border: 1px solid var(--table-border);
   width: 80%;
   max-width: 500px;
   border-radius: 8px;
@@ -395,8 +402,7 @@ nav .left p {
   background-color: rgba(255, 0, 0, 0.5);
   float: right;
   font-size: 28px;
-  padding: 0px 6px;
-  font-weight: bold;
+  padding: 0px 7px;
 }
 
 .close:hover,
@@ -442,13 +448,12 @@ form select {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: white;
+  background: var(--table-background);
   padding: 40px;
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   z-index: 9999;
-  overflow-y: auto;
 }
 
 .close-button {
@@ -463,27 +468,41 @@ form select {
   padding: 4px 8px;
 }
 
+.table-container {
+  max-height: 100%;
+  overflow-y: auto;
+  border-radius: 5px;
+}
+
 table {
   border-collapse: collapse;
   width: 100%;
-  margin: auto;
-  background-color: white;
+  margin: 0;
+  background-color: var(--table-background);
+  max-height: 100%;
+  overflow-y: auto;
 }
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
+table th,
+table td {
+  padding: 10px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--table-border);
 }
-th {
-  background-color: #f2f2f2;
+table th {
+  background-color: var(--table-header);
   font-weight: bold;
+  position: sticky;
+  z-index: 1;
+  top: -5px;
+}
+table tbody tr:hover {
+  background-color: var(--table-hover);
+}
+table td {
+  vertical-align: middle;
 }
 tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-tr:hover {
-  background: #d0d7d9;
+  background-color: var(--table-header);
 }
 
 #error,
@@ -509,7 +528,7 @@ tr:hover {
   right: 5px;
   background: transparent;
   cursor: pointer;
-  background-color: rgba(255, 0, 0, 0.5);
+  background-color: var(--btn-red-clear);
   color: white;
   font-size: 20px;
   border-radius: 25%;
@@ -518,7 +537,8 @@ tr:hover {
 }
 
 .delete-card-btn:hover {
-  color: #d00000;
+  transform: translateY(-2px);
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .link-card-btn {
@@ -527,7 +547,7 @@ tr:hover {
   right: 30px;
   background: transparent;
   cursor: pointer;
-  background-color: #007bff81;
+  background-color: var(--clickable-blue);
   color: white;
   font-size: 15px;
   border-radius: 25%;
@@ -537,9 +557,58 @@ tr:hover {
 }
 
 .link-card-btn:hover {
-  color: #000000;
+  transform: translateY(-2px);
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .bold {
   font-weight: bold;
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 14px;
+  margin-right: 5px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  margin-right: 5px;
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+  border-radius: 34px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 10px;
+  width: 10px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #2196f3;
+}
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196f3;
+}
+input:checked + .slider:before {
+  -webkit-transform: translateX(10.5px);
+  -ms-transform: translateX(10.5px);
+  transform: translateX(10.5px);
 }
