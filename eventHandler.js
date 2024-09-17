@@ -1,6 +1,8 @@
 // On reload hide errors
 hideError();
 
+var eventsArray;
+
 /*----------------------------------------------------------------
                         Variable Declarations
 ----------------------------------------------------------------*/
@@ -93,6 +95,34 @@ async function getSmartLockExpanded(stageKey, envKey, propertyID, bearer) {
         },
       }
     );
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      throw new Error("Network response was not ok");
+    }
+  } catch (error) {
+    console.error("There was a problem with the fetch operation:", error);
+    return null;
+  }
+}
+
+// Get event info
+async function getEvents(stageKey, envKey, propertyID, bearer) {
+  try {
+    const currentTime = Math.floor(Date.now() / 1000);
+    const oneWeekAgo = currentTime - 7 * 24 * 60 * 60;
+    const response = await fetch(
+      `https://accessevent.${stageKey}insomniaccia${envKey}.com/combinedevents/facilities/${propertyID}?uq=&vq=&itq=2&itq=3&itq=4&etq=5&etq=6&etq=10&etq=11&etq=12&etq=15&minDate=${oneWeekAgo}&maxDate=${currentTime}&hideMetadata=true`,
+      {
+        headers: {
+          Authorization: "Bearer " + (await bearer.access_token),
+          accept: "application/json",
+          "api-version": "3.0",
+        },
+      }
+    );
+
     if (response.ok) {
       const data = await response.json();
       return data;
@@ -502,6 +532,101 @@ async function smartlockExpandedPopUp(smartLocksExpanded, value, option) {
   document.body.appendChild(popupContainer);
 }
 
+async function smartlockEventsPopUp(events, value, option) {
+  // Create popup container
+  const popupContainer = document.createElement("div");
+  popupContainer.classList.add("events-popup-container");
+
+  const tableContainer = document.createElement("div");
+  tableContainer.classList.add("table-container");
+
+  const eventsTable = document.createElement("table");
+  eventsTable.className = "smart-lock-table";
+  const headers = [
+    "Event Date",
+    "Event Category",
+    "Event Type",
+    "Device Name",
+    "Unit Name",
+    "Visitor",
+    "Event Details",
+  ];
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  headers.forEach((headerText) => {
+    const th = document.createElement("th");
+    th.textContent = headerText;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+
+  const tbody = document.createElement("tbody");
+  // Loop through each event in events
+  events.forEach((event) => {
+    const row = document.createElement("tr");
+
+    // Create a cell for each header and populate it with the corresponding data
+    headers.forEach((header) => {
+      const td = document.createElement("td");
+      switch (header) {
+        case "Event Date":
+          td.textContent = event.createdOn;
+          break;
+        case "Event Category":
+          td.textContent = event.eventCategory;
+          break;
+        case "Event Type":
+          td.textContent = event.eventType;
+          break;
+        case "Device Name":
+          td.textContent = event.deviceName;
+          break;
+        case "Unit Name":
+          td.textContent = event.unitName;
+          break;
+        case "Visitor":
+          if (!event.visitorFirstName) {
+            td.textContent = "";
+          } else {
+            td.textContent =
+              event.visitorFirstName + " " + event.visitorLastName;
+          }
+          break;
+        case "Event Details":
+          td.textContent = event.eventDetails;
+          break;
+        default:
+          td.textContent = "";
+          break;
+      }
+      row.appendChild(td);
+    });
+
+    // Append the row to the tbody
+    tbody.appendChild(row);
+  });
+
+  eventsTable.appendChild(tbody);
+  eventsTable.appendChild(thead);
+  tableContainer.appendChild(eventsTable);
+  popupContainer.appendChild(tableContainer);
+
+  // Create close button
+  const closeButton = document.createElement("button");
+  closeButton.textContent = "X";
+  closeButton.classList.add("close-button");
+  closeButton.addEventListener("click", function () {
+    expanedOpened = false;
+    document.body.removeChild(popupContainer);
+    document.body.style.overflow = "";
+    enableButtons();
+  });
+
+  popupContainer.appendChild(closeButton);
+
+  document.body.appendChild(popupContainer);
+}
+
 async function createFacilityCard(facility) {
   // Create bearer token
   facility.bearer = await createBearer(
@@ -549,6 +674,30 @@ async function createFacilityCard(facility) {
     facility.propertyID,
     facility.bearer
   );
+
+  const events = await getEvents(
+    facility.stageKey,
+    facility.envKey,
+    facility.propertyID,
+    facility.bearer
+  );
+
+  const offlineEvents = events.filter(
+    (event) => event.eventType === "Device Offline"
+  );
+  const onlineEvents = events.filter(
+    (event) => event.eventType === "Device Online"
+  );
+  const lockFailure = events.filter(
+    (event) => event.eventType === "Lock Failure"
+  );
+  const unlockFailure = events.filter(
+    (event) => event.eventType === "Unlock Failure"
+  );
+  const lockSuccess = events.filter(
+    (event) => event.eventType === "Lock Success"
+  );
+  const lockAlarm = events.filter((event) => event.eventType === "Lock Alarm");
 
   const lowestBatteryLevel = smartLocksExpanded.reduce((min, device) => {
     return device.batteryLevel < min ? device.batteryLevel : min;
@@ -608,8 +757,6 @@ async function createFacilityCard(facility) {
           <div class="stat-number">${smartLocks.errorCount}</div>
           <div class="stat-label">Error</div>
         </li>
-      </ul>
-      <ul id="smartlock-list" class="stat-list">
         <li class="stat-item" id="low-battery" title="View the Lowest Battery">
           <div class="stat-number">${lowestBatteryLevel + "%"}</div>
           <div class="stat-label">Lowest battery</div>
@@ -625,7 +772,7 @@ async function createFacilityCard(facility) {
           <div class="stat-label">Offline SmartLocks</div>
         </li>
       </ul>
-      <li id="edgeRouter" class="bold" title="Edge Routers & Access Points"><strong>OpenNet:</strong></li>
+    <li id="edgeRouter" class="bold" title="Edge Routers & Access Points"><strong>OpenNet:</strong></li>
     <ul id="edge-router-list">
       <li id="edgeRouterLi">
         <div>
@@ -642,8 +789,34 @@ async function createFacilityCard(facility) {
       </li>
       <ul id="access-points-list"></ul>
     </ul>
+    <li id="weekly" class="bold"><span id="weeklyCollapse">  -  </span><strong><span id="weeklyEvents" class="bold">Weekly Events:</span></strong></li>
+    <ul id="events-list" class="stat-list">
+      <li class="stat-item" id="offlineEvents" title="View all Offline Events">
+        <div class="stat-number">${offlineEvents.length}</div>
+        <div class="stat-label">Device Offline</div>
+      </li>
+      <li class="stat-item" id="onlineEvents" title="View all Online Events">
+        <div class="stat-number">${onlineEvents.length}</div>
+        <div class="stat-label">Device Online</div>
+      </li>
+      <li class="stat-item" id="lockAlarm" title="View all Lock Alarm Events">
+        <div class="stat-number">${lockAlarm.length}</div>
+        <div class="stat-label">Lock Alarm</div>
+      </li>
+      <li class="stat-item" id="unlockFailure" title="View all Unlock Failure Events">
+        <div class="stat-number">${unlockFailure.length}</div>
+        <div class="stat-label">Unlock Failure</div>
+      </li>
+      <li class="stat-item" id="lockFailure" title="View all Lock Failure Events">
+        <div class="stat-number">${lockFailure.length}</div>
+        <div class="stat-label">Lock Failure</div>
+      </li>
+      <li class="stat-item" id="lockSuccess" title="View all Lock Success Events">
+        <div class="stat-number">${lockSuccess.length}</div>
+        <div class="stat-label">Lock Success</div>
+      </li>
+    </ul>
   `;
-
   const edgeRouterStatus = card.querySelector("#edge-router-list li");
   if (edgeRouter.isDeviceOffline) {
     edgeRouterStatus.style.backgroundColor = "#f69697";
@@ -664,7 +837,6 @@ async function createFacilityCard(facility) {
 
       hideLoadingSpinner();
     });
-
   card.querySelector("#okay").addEventListener("click", async function () {
     if (expanedOpened) return false;
     showLoadingSpinner();
@@ -678,7 +850,6 @@ async function createFacilityCard(facility) {
 
     hideLoadingSpinner();
   });
-
   card.querySelector("#warning").addEventListener("click", async function () {
     if (expanedOpened) return false;
     showLoadingSpinner();
@@ -692,7 +863,6 @@ async function createFacilityCard(facility) {
 
     hideLoadingSpinner();
   });
-
   card.querySelector("#error").addEventListener("click", async function () {
     if (expanedOpened) return false;
     showLoadingSpinner();
@@ -705,7 +875,6 @@ async function createFacilityCard(facility) {
 
     hideLoadingSpinner();
   });
-
   card
     .querySelector("#low-battery")
     .addEventListener("click", async function () {
@@ -724,7 +893,6 @@ async function createFacilityCard(facility) {
 
       hideLoadingSpinner();
     });
-
   card
     .querySelector("#low-signal")
     .addEventListener("click", async function () {
@@ -739,7 +907,6 @@ async function createFacilityCard(facility) {
 
       hideLoadingSpinner();
     });
-
   card.querySelector("#offline").addEventListener("click", async function () {
     if (expanedOpened) return false;
     showLoadingSpinner();
@@ -751,6 +918,132 @@ async function createFacilityCard(facility) {
     smartlockExpandedPopUp(devicesOffline, "error", "offline");
 
     hideLoadingSpinner();
+  });
+
+  card
+    .querySelector("#weeklyEvents")
+    .addEventListener("click", async function () {
+      if (expanedOpened) return false;
+      showLoadingSpinner();
+
+      // Disable scrolling on body
+      document.body.style.overflow = "hidden";
+      expanedOpened = true;
+      disableButtons();
+
+      smartlockEventsPopUp(events);
+
+      hideLoadingSpinner();
+    });
+  card
+    .querySelector("#offlineEvents")
+    .addEventListener("click", async function () {
+      if (expanedOpened) return false;
+      showLoadingSpinner();
+
+      // Disable scrolling on body
+      document.body.style.overflow = "hidden";
+      expanedOpened = true;
+      disableButtons();
+
+      smartlockEventsPopUp(offlineEvents);
+
+      hideLoadingSpinner();
+    });
+  card
+    .querySelector("#onlineEvents")
+    .addEventListener("click", async function () {
+      if (expanedOpened) return false;
+      showLoadingSpinner();
+
+      // Disable scrolling on body
+      document.body.style.overflow = "hidden";
+      expanedOpened = true;
+      disableButtons();
+
+      smartlockEventsPopUp(onlineEvents);
+
+      hideLoadingSpinner();
+    });
+  card.querySelector("#lockAlarm").addEventListener("click", async function () {
+    if (expanedOpened) return false;
+    showLoadingSpinner();
+
+    // Disable scrolling on body
+    document.body.style.overflow = "hidden";
+    expanedOpened = true;
+    disableButtons();
+
+    smartlockEventsPopUp(lockAlarm);
+
+    hideLoadingSpinner();
+  });
+  card
+    .querySelector("#unlockFailure")
+    .addEventListener("click", async function () {
+      if (expanedOpened) return false;
+      showLoadingSpinner();
+
+      // Disable scrolling on body
+      document.body.style.overflow = "hidden";
+      expanedOpened = true;
+      disableButtons();
+
+      smartlockEventsPopUp(unlockFailure);
+
+      hideLoadingSpinner();
+    });
+  card
+    .querySelector("#lockFailure")
+    .addEventListener("click", async function () {
+      if (expanedOpened) return false;
+      showLoadingSpinner();
+
+      // Disable scrolling on body
+      document.body.style.overflow = "hidden";
+      expanedOpened = true;
+      disableButtons();
+
+      smartlockEventsPopUp(lockFailure);
+
+      hideLoadingSpinner();
+    });
+  card
+    .querySelector("#lockSuccess")
+    .addEventListener("click", async function () {
+      if (expanedOpened) return false;
+      showLoadingSpinner();
+
+      // Disable scrolling on body
+      document.body.style.overflow = "hidden";
+      expanedOpened = true;
+      disableButtons();
+
+      smartlockEventsPopUp(lockSuccess);
+
+      hideLoadingSpinner();
+    });
+
+  card.querySelector("#weeklyCollapse").addEventListener("click", function () {
+    const events = card.querySelector("#events-list");
+    const currentDisplay = card.computedStyleMap(events).display;
+    const collapseIcon = card.querySelector("#weeklyCollapse");
+
+    if (currentDisplay === "none" || events.style.display === "none") {
+      events.style.display = "flex";
+      collapseIcon.textContent = "- ";
+    } else {
+      events.style.display = "none";
+      collapseIcon.textContent = "+ ";
+    }
+  });
+
+  card.addEventListener("mouseenter", function () {
+    document.body.classList.add("scroll-lock");
+  });
+
+  card.addEventListener("mouseleave", function () {
+    document.body.classList.remove("scroll-lock");
   });
 
   // Populate access points
