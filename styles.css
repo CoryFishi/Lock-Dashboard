@@ -36,6 +36,18 @@
   --card-background: #2c333a;
 }
 
+html,
+body {
+  overflow: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
 * {
   margin: 0;
   font-family: "Roboto", sans-serif;
@@ -643,4 +655,34 @@ input:checked + .slider:before {
 
 body.scroll-lock {
   overflow: hidden;
+}
+
+#scroll-buttons {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#scroll-up,
+#scroll-down {
+  width: 40px;
+  height: 40px;
+  background-color: var(--clickable-blue);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#scroll-up:hover,
+#scroll-down:hover {
+  background-color: var(--clickable-blue);
 }

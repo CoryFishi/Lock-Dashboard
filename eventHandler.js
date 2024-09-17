@@ -1135,7 +1135,6 @@ function createImportCard() {
 
   importCard.querySelector(".add-button").addEventListener("click", () => {
     modal.style.display = "block";
-    disableButtons();
   });
 
   document.querySelector(".import-button").addEventListener("click", () => {
@@ -1182,6 +1181,20 @@ async function renderCards(facilities) {
   const importCard = createImportCard();
   cardContainer.appendChild(importCard);
 }
+
+document.getElementById("scroll-up").addEventListener("click", function () {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth", // Smooth scroll to the top
+  });
+});
+
+document.getElementById("scroll-down").addEventListener("click", function () {
+  window.scrollTo({
+    top: document.body.scrollHeight,
+    behavior: "smooth", // Smooth scroll to the bottom
+  });
+});
 
 //
 //
