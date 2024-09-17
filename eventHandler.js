@@ -743,7 +743,7 @@ async function createFacilityCard(facility) {
     facility.propertyID
   }/dashboard">➚</a>
     <ul>
-      <li id="smartlocks" class="bold" title="View all SmartLocks"><strong>SmartLocks:</strong></li>
+      <li id="smartlocks"><span id="smartlockCollapse"> - </span><span id="smartlockList" class="bold" title="View all SmartLocks">SmartLocks:</span></li>
       <ul id="smartlock-list" class="stat-list">
         <li class="stat-item" id="okay" title="View all Good">
           <div class="stat-number">${smartLocks.okCount}</div>
@@ -772,7 +772,7 @@ async function createFacilityCard(facility) {
           <div class="stat-label">Offline SmartLocks</div>
         </li>
       </ul>
-    <li id="edgeRouter" class="bold" title="Edge Routers & Access Points"><strong>OpenNet:</strong></li>
+    <li id="edgeRouter" class="bold"><span id="edgeRouterCollapse"> - </span><span id="edgeRouterList" class="bold" title="Edge Routers & Access Points">OpenNet:</span></li>
     <ul id="edge-router-list">
       <li id="edgeRouterLi">
         <div>
@@ -789,7 +789,7 @@ async function createFacilityCard(facility) {
       </li>
       <ul id="access-points-list"></ul>
     </ul>
-    <li id="weekly" class="bold"><span id="weeklyCollapse">  -  </span><strong><span id="weeklyEvents" class="bold">Weekly Events:</span></strong></li>
+    <li id="weekly" class="bold"><span id="weeklyCollapse"> - </span><strong><span id="weeklyEvents" class="bold" title="View All Weekly Events">Weekly Events:</span></strong></li>
     <ul id="events-list" class="stat-list">
       <li class="stat-item" id="offlineEvents" title="View all Offline Events">
         <div class="stat-number">${offlineEvents.length}</div>
@@ -823,7 +823,7 @@ async function createFacilityCard(facility) {
   }
 
   card
-    .querySelector("#smartlocks")
+    .querySelector("#smartlockList")
     .addEventListener("click", async function () {
       if (expanedOpened) return false;
       showLoadingSpinner();
@@ -1024,6 +1024,24 @@ async function createFacilityCard(facility) {
       hideLoadingSpinner();
     });
 
+  card
+    .querySelector("#edgeRouterCollapse")
+    .addEventListener("click", function () {
+      const elist = card.querySelector("#edge-router-list");
+      const alist = card.querySelector("#access-points-list");
+      const currentDisplay = card.computedStyleMap(elist).display;
+      const collapseIcon = card.querySelector("#edgeRouterCollapse");
+
+      if (currentDisplay === "none" || elist.style.display === "none") {
+        elist.style.display = "grid";
+        alist.style.display = "grid";
+        collapseIcon.textContent = "- ";
+      } else {
+        alist.style.display = "none";
+        elist.style.display = "none";
+        collapseIcon.textContent = "+ ";
+      }
+    });
   card.querySelector("#weeklyCollapse").addEventListener("click", function () {
     const events = card.querySelector("#events-list");
     const currentDisplay = card.computedStyleMap(events).display;
@@ -1037,6 +1055,21 @@ async function createFacilityCard(facility) {
       collapseIcon.textContent = "+ ";
     }
   });
+  card
+    .querySelector("#smartlockCollapse")
+    .addEventListener("click", function () {
+      const smartlocks = card.querySelector("#smartlock-list");
+      const currentDisplay = card.computedStyleMap(smartlocks).display;
+      const collapseIcon = card.querySelector("#smartlockCollapse");
+
+      if (currentDisplay === "none" || smartlocks.style.display === "none") {
+        smartlocks.style.display = "flex";
+        collapseIcon.textContent = "- ";
+      } else {
+        smartlocks.style.display = "none";
+        collapseIcon.textContent = "+ ";
+      }
+    });
 
   card.addEventListener("mouseenter", function () {
     document.body.classList.add("scroll-lock");

@@ -524,7 +524,8 @@ tr:nth-child(even) {
   background-color: var(--table-header);
 }
 
-.stat-item {
+.stat-item,
+#smartlockList {
   cursor: pointer;
 }
 #smartlocks,
@@ -533,6 +534,7 @@ tr:nth-child(even) {
 #weekly {
   margin-top: 10px;
   padding-bottom: 4px;
+  color: var(--clickable-blue);
   border-bottom: 1px solid #f0f0f0;
 }
 
@@ -540,7 +542,9 @@ tr:nth-child(even) {
   cursor: pointer;
 }
 
-#weeklyCollapse {
+#weeklyCollapse,
+#smartlockCollapse,
+#edgeRouterCollapse {
   font-size: x-large;
   color: var(--clickable-blue);
   cursor: pointer;
