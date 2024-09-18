@@ -283,15 +283,7 @@ async function getFacility(stageKey, envKey, propertyID, bearer) {
 
 // Function to refresh the json table
 async function refreshTable() {
-  showLoadingSpinner();
-  hideError();
-  setTimeout(() => {
-    renderCards(facilities);
-    hideLoadingSpinner();
-  }, 1000);
-  setTimeout(() => {
-    displayLoadDateTime();
-  }, 1005);
+  location.reload();
 }
 
 // Function to show error fetching data
@@ -410,9 +402,19 @@ function hideLoadingSpinner() {
 }
 
 async function smartlockExpandedPopUp(smartLocksExpanded, value, option) {
+  var count = 0;
+
   // Create popup container
   const popupContainer = document.createElement("div");
   popupContainer.classList.add("expanded-popup-container");
+
+  const smartLockTotalContainer = document.createElement("div");
+  smartLockTotalContainer.classList.add("smartLock-total-container");
+
+  const smartLockToal = document.createElement("h3");
+
+  smartLockTotalContainer.appendChild(smartLockToal);
+  popupContainer.appendChild(smartLockTotalContainer);
 
   const tableContainer = document.createElement("div");
   tableContainer.classList.add("table-container");
@@ -451,6 +453,8 @@ async function smartlockExpandedPopUp(smartLocksExpanded, value, option) {
     ) {
       return;
     }
+
+    count++;
 
     // Create a cell for each header and populate it with the corresponding data
     headers.forEach((header) => {
@@ -511,6 +515,8 @@ async function smartlockExpandedPopUp(smartLocksExpanded, value, option) {
     tbody.appendChild(row);
   });
 
+  smartLockToal.innerText = `${count} / ${smartLocksExpanded.length} SmartLocks`;
+
   expandedSmartLockTable.appendChild(tbody);
   expandedSmartLockTable.appendChild(thead);
   tableContainer.appendChild(expandedSmartLockTable);
@@ -532,10 +538,19 @@ async function smartlockExpandedPopUp(smartLocksExpanded, value, option) {
   document.body.appendChild(popupContainer);
 }
 
-async function smartlockEventsPopUp(events, value, option) {
+async function smartlockEventsPopUp(events) {
   // Create popup container
   const popupContainer = document.createElement("div");
   popupContainer.classList.add("events-popup-container");
+
+  const eventsTotalContainer = document.createElement("div");
+  eventsTotalContainer.classList.add("events-total-container");
+
+  const eventsToal = document.createElement("h3");
+  eventsToal.innerText = `${events.length} Events`;
+
+  eventsTotalContainer.appendChild(eventsToal);
+  popupContainer.appendChild(eventsTotalContainer);
 
   const tableContainer = document.createElement("div");
   tableContainer.classList.add("table-container");
@@ -565,12 +580,24 @@ async function smartlockEventsPopUp(events, value, option) {
   events.forEach((event) => {
     const row = document.createElement("tr");
 
+    const date = new Date(event.createdOn);
+    const options = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+      timeZoneName: "short",
+    };
+    const readableDate = date.toLocaleDateString("en-US", options);
+
     // Create a cell for each header and populate it with the corresponding data
     headers.forEach((header) => {
       const td = document.createElement("td");
       switch (header) {
         case "Event Date":
-          td.textContent = event.createdOn;
+          td.textContent = readableDate;
           break;
         case "Event Category":
           td.textContent = event.eventCategory;

@@ -21,6 +21,9 @@
   --text-black: black;
   --text-white: white;
   --card-background: white;
+  --li-background: #f9f9f9;
+  --sub-text: #666;
+  --stat-text: #333;
 }
 
 .darkmode {
@@ -34,6 +37,9 @@
   --table-header: #2c333a;
   --table-hover: #22272b;
   --card-background: #2c333a;
+  --li-background: #22272b;
+  --sub-text: #c0c0c0;
+  --stat-text: #ffffff;
 }
 
 html,
@@ -124,7 +130,7 @@ nav {
   width: 100%;
   height: 60px;
   padding: 0 20px;
-  box-shadow: 0 2px 4px var(--table-border);
+  box-shadow: 0 2px 4px #49494963;
   z-index: 9999;
 }
 
@@ -245,7 +251,7 @@ nav .left p {
 
 #access-points-list li {
   padding: 8px;
-  background-color: #f9f9f9;
+  background-color: var(--li-background);
   border-radius: 4px;
   margin-bottom: 4px;
 }
@@ -255,7 +261,6 @@ nav .left p {
 #smartlock-list li,
 #events-list li {
   padding: 8px;
-  background-color: #f9f9f9;
   border-radius: 4px;
   flex: 1 1 calc(32% - 16px);
   box-sizing: border-box;
@@ -283,8 +288,8 @@ nav .left p {
 
 #edge-router-list li {
   padding: 8px;
-  background-color: #f9f9f9;
-  color: black;
+  background-color: var(--li-background);
+  color: var(--body-text);
   border-radius: 4px;
   margin-bottom: 8px;
 }
@@ -302,17 +307,19 @@ nav .left p {
   text-align: center;
   margin: 10px;
   flex: 1;
+  border-radius: 5px;
+  background-color: var(--li-background);
 }
 
 .stat-number {
   font-size: 2em;
   font-weight: bold;
-  color: #333;
+  color: var(--stat-text);
 }
 
 .stat-label {
   font-size: 1em;
-  color: #666;
+  color: var(--sub-text);
 }
 .import-card {
   display: flex;
@@ -653,7 +660,7 @@ input:checked + .slider:before {
   transform: translateX(10.5px);
 }
 
-body.scroll-lock {
+body .scroll-lock {
   overflow: hidden;
 }
 
@@ -685,4 +692,19 @@ body.scroll-lock {
 #scroll-up:hover,
 #scroll-down:hover {
   background-color: var(--clickable-blue);
+}
+
+.card::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.card::-webkit-scrollbar-thumb {
+  background-color: #d3d3d3;
+  border-radius: 6px;
+}
+
+.card::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 6px;
 }
