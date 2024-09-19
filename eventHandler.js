@@ -401,7 +401,12 @@ function hideLoadingSpinner() {
   spinner.classList.add("hidden");
 }
 
-async function smartlockExpandedPopUp(smartLocksExpanded, value, option) {
+async function smartlockExpandedPopUp(
+  smartLocksExpanded,
+  value,
+  option,
+  totalSmartLocksExpanded
+) {
   var count = 0;
 
   // Create popup container
@@ -515,7 +520,7 @@ async function smartlockExpandedPopUp(smartLocksExpanded, value, option) {
     tbody.appendChild(row);
   });
 
-  smartLockToal.innerText = `${count} / ${smartLocksExpanded.length} SmartLocks`;
+  smartLockToal.innerText = `${count} / ${totalSmartLocksExpanded.length} SmartLocks`;
 
   expandedSmartLockTable.appendChild(tbody);
   expandedSmartLockTable.appendChild(thead);
@@ -873,7 +878,12 @@ async function createFacilityCard(facility) {
     expanedOpened = true;
     disableButtons();
 
-    smartlockExpandedPopUp(smartLocksExpanded, "ok", "overallStatus");
+    smartlockExpandedPopUp(
+      smartLocksExpanded,
+      "ok",
+      "overallStatus",
+      smartLocksExpanded
+    );
 
     hideLoadingSpinner();
   });
@@ -886,7 +896,12 @@ async function createFacilityCard(facility) {
     expanedOpened = true;
     disableButtons();
 
-    smartlockExpandedPopUp(smartLocksExpanded, "warning", "overallStatus");
+    smartlockExpandedPopUp(
+      smartLocksExpanded,
+      "warning",
+      "overallStatus",
+      smartLocksExpanded
+    );
 
     hideLoadingSpinner();
   });
@@ -898,7 +913,12 @@ async function createFacilityCard(facility) {
     expanedOpened = true;
     disableButtons();
 
-    smartlockExpandedPopUp(smartLocksExpanded, "error", "overallStatus");
+    smartlockExpandedPopUp(
+      smartLocksExpanded,
+      "error",
+      "overallStatus",
+      smartLocksExpanded
+    );
 
     hideLoadingSpinner();
   });
@@ -915,7 +935,8 @@ async function createFacilityCard(facility) {
       smartlockExpandedPopUp(
         devicesWithLowestBattery,
         "error",
-        "lowestBattery"
+        "lowestBattery",
+        smartLocksExpanded
       );
 
       hideLoadingSpinner();
@@ -930,7 +951,12 @@ async function createFacilityCard(facility) {
       expanedOpened = true;
       disableButtons();
 
-      smartlockExpandedPopUp(devicesWithLowestSignal, "error", "lowestSignal");
+      smartlockExpandedPopUp(
+        devicesWithLowestSignal,
+        "error",
+        "lowestSignal",
+        smartLocksExpanded
+      );
 
       hideLoadingSpinner();
     });
@@ -942,7 +968,12 @@ async function createFacilityCard(facility) {
     expanedOpened = true;
     disableButtons();
 
-    smartlockExpandedPopUp(devicesOffline, "error", "offline");
+    smartlockExpandedPopUp(
+      devicesOffline,
+      "error",
+      "offline",
+      smartLocksExpanded
+    );
 
     hideLoadingSpinner();
   });
