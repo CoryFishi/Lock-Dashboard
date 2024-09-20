@@ -8,104 +8,122 @@
   </head>
 
   <body>
-    <!-- Navigation -->
-    <nav>
-      <div class="left">
-        <a id="refreshIcon" onclick="refreshTable()">↻</a>
-        <p id="loadDateTime">Date Loading...</p>
+    <div class="wrapper">
+      <!-- Navigation -->
+      <nav>
+        <div class="left">
+          <a id="refreshIcon" onclick="refreshTable()">↻</a>
+          <p id="loadDateTime">Date Loading...</p>
+        </div>
+
+        <h1>SmartLock Dashboard</h1>
+
+        <div class="right">
+          <!-- Will add dark mode selector back in at a later time -->
+          <label class="darkModeCheckbox">Dark Mode</label>
+          <label class="switch">
+            <input type="checkbox" id="darkModeToggle" />
+            <span class="slider round"></span>
+          </label>
+          <button class="import-button">Import</button>
+          <button class="export-button">Export</button>
+          <input
+            type="file"
+            id="csv-file-input"
+            style="display: none"
+            accept=".csv"
+          />
+        </div>
+      </nav>
+
+      <!-- Card -->
+      <div id="card-container" class="card-container"></div>
+
+      <!-- Loading Spinner .hidden on load -->
+      <div id="loading-spinner" class="hidden">
+        <div class="spinner"></div>
       </div>
 
-      <h1>SmartLock Dashboard</h1>
+      <!-- Error Notification -->
+      <p id="errText">Error Loading...</p>
 
-      <div class="right">
-        <!-- Will add dark mode selector back in at a later time -->
-        <label class="darkModeCheckbox">Dark Mode</label>
-        <label class="switch">
-          <input type="checkbox" id="darkModeToggle" />
-          <span class="slider round"></span>
-        </label>
-        <button class="import-button">Import</button>
-        <button class="export-button">Export</button>
-        <input
-          type="file"
-          id="csv-file-input"
-          style="display: none"
-          accept=".csv"
-        />
+      <!-- Facility Add Modal -->
+      <div id="addFacilityModal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2>Add New Facility</h2>
+          <form id="addFacilityForm">
+            <label for="propertyId"
+              >Property Id:<span style="color: red">*</span></label
+            >
+            <input
+              type="text"
+              id="propertyId"
+              name="propertyId"
+              required
+            /><br />
+
+            <label for="apiKey"
+              >API Key:<span style="color: red">*</span></label
+            >
+            <input type="text" id="apiKey" name="apiKey" required /><br />
+
+            <label for="apiSecret"
+              >API Secret:<span style="color: red">*</span></label
+            >
+            <input type="text" id="apiSecret" name="apiSecret" required /><br />
+
+            <label for="clientId"
+              >Client Id:<span style="color: red">*</span></label
+            >
+            <input type="text" id="clientId" name="clientId" required /><br />
+
+            <label for="secretId"
+              >Client Secret:<span style="color: red">*</span></label
+            >
+            <input type="text" id="secretId" name="secretId" required /><br />
+
+            <label for="environment"
+              >Environment:<span style="color: red">*</span></label
+            >
+            <select id="environment" name="environment">
+              <option value="">Production</option>
+              <option value="-dev">Development</option>
+              <option value="-qa">QA</option>
+              <option value="">Staging</option></select
+            ><br />
+
+            <label for="stagingKey"
+              >Staging:<span style="color: red">*</span></label
+            >
+            <select id="stagingKey" name="stagingKey">
+              <option value="">False</option>
+              <option value="cia-stg-1.aws.">True</option></select
+            ><br />
+
+            <button type="submit" class="submit-button" id="submit-button">
+              Add Facility
+            </button>
+          </form>
+        </div>
       </div>
-    </nav>
 
-    <!-- Card -->
-    <div id="card-container" class="card-container"></div>
-
-    <!-- Loading Spinner .hidden on load -->
-    <div id="loading-spinner" class="hidden">
-      <div class="spinner"></div>
-    </div>
-
-    <!-- Error Notification -->
-    <p id="errText">Error Loading...</p>
-
-    <!-- Facility Add Modal -->
-    <div id="addFacilityModal" class="modal">
-      <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Add New Facility</h2>
-        <form id="addFacilityForm">
-          <label for="propertyId"
-            >Property Id:<span style="color: red">*</span></label
-          >
-          <input type="text" id="propertyId" name="propertyId" required /><br />
-
-          <label for="apiKey">API Key:<span style="color: red">*</span></label>
-          <input type="text" id="apiKey" name="apiKey" required /><br />
-
-          <label for="apiSecret"
-            >API Secret:<span style="color: red">*</span></label
-          >
-          <input type="text" id="apiSecret" name="apiSecret" required /><br />
-
-          <label for="clientId"
-            >Client Id:<span style="color: red">*</span></label
-          >
-          <input type="text" id="clientId" name="clientId" required /><br />
-
-          <label for="secretId"
-            >Client Secret:<span style="color: red">*</span></label
-          >
-          <input type="text" id="secretId" name="secretId" required /><br />
-
-          <label for="environment"
-            >Environment:<span style="color: red">*</span></label
-          >
-          <select id="environment" name="environment">
-            <option value="">Production</option>
-            <option value="-dev">Development</option>
-            <option value="-qa">QA</option>
-            <option value="">Staging</option></select
-          ><br />
-
-          <label for="stagingKey"
-            >Staging:<span style="color: red">*</span></label
-          >
-          <select id="stagingKey" name="stagingKey">
-            <option value="">False</option>
-            <option value="cia-stg-1.aws.">True</option></select
-          ><br />
-
-          <button type="submit" class="submit-button" id="submit-button">
-            Add Facility
-          </button>
-        </form>
+      <div id="scroll-buttons">
+        <button id="scroll-up">↑</button>
+        <button id="scroll-down">↓</button>
       </div>
+      <!-- Footer -->
+      <!-- Incase copyright is needed -->
+      <!-- <footer>&copy; 2024 Company Name. All Rights Reserved.</footer> -->
+      <footer>
+        <a href="https://coryfishi.github.io/Lock-Dashboard/">Lock Dashboard</a>
+        |
+        <a href="https://coryfishi.github.io/PropertyManagementSolution/"
+          >Property Management Solution</a
+        >
+      </footer>
+      <!-- JavaScript Includes -->
+      <script src="eventHandler.js"></script>
     </div>
-
-    <div id="scroll-buttons">
-      <button id="scroll-up">↑</button>
-      <button id="scroll-down">↓</button>
-    </div>
-
-    <!-- JavaScript Includes -->
-    <script src="eventHandler.js"></script>
   </body>
 </html>

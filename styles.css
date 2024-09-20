@@ -69,6 +69,26 @@ body {
   font-size: medium;
 }
 
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Full viewport height */
+}
+/* Footer Styles */
+footer {
+  color: var(--body-text);
+  padding: 20px 0;
+  text-align: center;
+}
+
+footer a {
+  text-decoration: none;
+  color: var(--clickable-blue);
+}
+footer a:hover {
+  color: var(--clickable-blue-hover);
+}
+
 #refreshIcon {
   color: var(--clickable-blue);
 }
@@ -176,6 +196,7 @@ nav .left p {
   margin-top: 65px;
   justify-content: center;
   align-items: center;
+  flex-grow: 1;
 }
 
 .card {
